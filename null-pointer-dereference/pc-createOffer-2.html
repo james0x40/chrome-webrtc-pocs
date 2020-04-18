@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      var iframe = document.createElement( "iframe");
+      iframe.height = 3;
+      iframe.width = 3;
+      document.body.appendChild( iframe );
+   
+      var pc = new iframe.contentWindow.RTCPeerConnection();
+      var option = { mandatory : { minAspectRatio : { toString : _ => {iframe.remove();} } } };
+      pc.createOffer( _ => {}, _ => {}, option ) ;
+    </script>
+  </body>
+</html>

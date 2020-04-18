@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      var iframe = document.createElement( "iframe");
+      iframe.height = 300;
+      iframe.width = 300;
+      document.body.appendChild( iframe );
+          
+      var pc = new iframe.contentWindow.RTCPeerConnection();
+      var option = {};
+      option.__defineGetter__("offerToReceiveVideo", function(){ iframe.remove(); return 0; } );
+      pc.createOffer(_ => {}, _ => {}, option ) ;
+    </script>
+  </body>
+</html>
